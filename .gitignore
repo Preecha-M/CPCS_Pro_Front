@@ -1,0 +1,75 @@
+# ======================
+# OS / Editor
+# ======================
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ======================
+# Env / Secrets
+# ======================
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# ======================
+# Logs
+# ======================
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ======================
+# Node / Frontend
+# ======================
+node_modules/
+dist/
+dist-ssr/
+build/
+.vite/
+*.local
+
+# ======================
+# Python / Backend
+# ======================
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+pip-wheel-metadata/
+*.egg-info/
+.eggs/
+.cache/
+
+# ======================
+# FastAPI / Uvicorn
+# ======================
+*.sqlite3
+*.db
+
+# ======================
+# Jupyter (ถ้ามี)
+# ======================
+.ipynb_checkpoints/
+
+# ======================
+# Upload / Generated (ปรับตามโปรเจกต์คุณ)
+# ======================
+uploads/
+tmp/
+temp/
