@@ -26,6 +26,12 @@ export type BubblePoint = {
   disease: string | null;
 };
 
+export type DiseaseColors = {
+  light: Record<string, string>;
+  dark: Record<string, string>;
+};
+
+
 export type AdminDashboardResponse = {
   selected_date: string;
   selected_lat: string;
@@ -47,6 +53,7 @@ export type AdminDashboardResponse = {
   records: AdminRecord[];
   page: number;
   total_pages: number;
+  disease_colors: DiseaseColors;
 
   weather_list?: Array<{
     time: string;
@@ -59,6 +66,7 @@ export async function fetchAdminDashboard(params: {
   lat?: string;
   lon?: string;
   page?: number;
+  
 }): Promise<AdminDashboardResponse> {
   const sp = new URLSearchParams();
   if (params.date) sp.set("date", params.date);
@@ -75,5 +83,7 @@ export async function fetchAdminDashboard(params: {
     const text = await res.text().catch(() => "");
     throw new Error(`API error ${res.status}: ${text}`);
   }
+
+  
   return res.json();
 }

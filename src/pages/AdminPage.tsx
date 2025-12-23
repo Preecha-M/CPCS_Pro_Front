@@ -16,6 +16,7 @@ import {
 } from "chart.js";
 import { MapContainer, TileLayer, CircleMarker, Tooltip as LTooltip } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
+import DiseaseLegend from "../components/DiseaseLegend";
 
 ChartJS.register(
   ArcElement,
@@ -49,6 +50,7 @@ function useThemeColors() {
 
 export default function AdminPage() {
   const colors = useThemeColors();
+
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
   const [data, setData] = useState<AdminDashboardResponse | null>(null);
@@ -57,6 +59,21 @@ export default function AdminPage() {
   const [lat, setLat] = useState<string>("13.10");
   const [lon, setLon] = useState<string>("100.10");
   const [page, setPage] = useState<number>(1);
+
+  const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains("dark"));
+  useEffect(() => {
+    const obs = new MutationObserver(() => setIsDark(document.documentElement.classList.contains("dark")));
+    obs.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+    return () => obs.disconnect();
+  }, []);
+
+  const diseaseColor = useMemo(() => {
+    const map = isDark ? data?.disease_colors?.dark : data?.disease_colors?.light;
+    return (name?: string | null) => {
+      const key = name || "Unknown";
+      return map?.[key] || (isDark ? "#CBD5E1" : "#94A3B8");
+    };
+  }, [data, isDark]);
 
   async function load(p = page) {
     setErr("");
@@ -80,25 +97,63 @@ export default function AdminPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const legendItems = useMemo(() => {
+    const dc = data?.disease_counts || {};
+    return Object.entries(dc)
+      .sort((a, b) => (b[1] ?? 0) - (a[1] ?? 0))
+      .map(([name, count]) => ({
+        name,
+        count,
+        color: diseaseColor(name),
+      }));
+  }, [data, diseaseColor]);
+
   const pieData = useMemo(() => {
     const dc = data?.disease_counts || {};
-    return { labels: Object.keys(dc), datasets: [{ data: Object.values(dc) }] };
-  }, [data]);
+    const labels = Object.keys(dc);
+    return {
+      labels,
+      datasets: [
+        {
+          data: Object.values(dc),
+          backgroundColor: labels.map((n) => diseaseColor(n)),
+          borderColor: labels.map((n) => diseaseColor(n)),
+          borderWidth: 1,
+        },
+      ],
+    };
+  }, [data, diseaseColor]);
 
   const lineData = useMemo(() => {
     return {
       labels: data?.time_series_labels || [],
       datasets:
-        data?.time_series_datasets?.map((ds) => ({ label: ds.label, data: ds.data, tension: 0.25, fill: false })) || []
+        data?.time_series_datasets?.map((ds) => {
+          const c = diseaseColor(ds.label);
+          return {
+            label: ds.label,
+            data: ds.data,
+            tension: 0.25,
+            fill: true,
+            borderColor: c,
+            backgroundColor: c + "33",
+            pointBackgroundColor: c,
+          };
+        }) || [],
     };
-  }, [data]);
+  }, [data, diseaseColor]);
 
   const barGroupedData = useMemo(() => {
     return {
       labels: data?.grouped_locations || [],
-      datasets: data?.grouped_datasets?.map((ds) => ({ label: ds.label, data: ds.data })) || []
+      datasets:
+        data?.grouped_datasets?.map((ds) => ({
+          label: ds.label,
+          data: ds.data,
+          backgroundColor: diseaseColor(ds.label),
+        })) || [],
     };
-  }, [data]);
+  }, [data, diseaseColor]);
 
   const histData = useMemo(() => {
     const confs = data?.confidence_values || [];
@@ -110,8 +165,8 @@ export default function AdminPage() {
       }
     }
     const labels = Array.from({ length: 10 }, (_, i) => `${(i / 10).toFixed(1)}–${((i + 1) / 10).toFixed(1)}`);
-    return { labels, datasets: [{ label: "จำนวนรายการ", data: counts }] };
-  }, [data]);
+    return { labels, datasets: [{ label: "จำนวนรายการ", data: counts, backgroundColor: isDark ? "#A78BFA" : "#6366F1" }] };
+  }, [data, isDark]);
 
   const chartOptions = useMemo(() => {
     return {
@@ -226,6 +281,8 @@ export default function AdminPage() {
               </div>
             </section>
 
+            <DiseaseLegend items={legendItems} />
+
             <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div className="rounded-2xl bg-white dark:bg-white/5 ring-1 ring-gray-100 dark:ring-white/10 shadow-soft p-5">
                 <h3 className="text-lg font-semibold mb-2">1) สัดส่วนชนิดโรคที่ตรวจพบ</h3>
@@ -265,7 +322,11 @@ export default function AdminPage() {
                         key={i}
                         center={[p.lat, p.lon]}
                         radius={Math.max(6, Math.min(32, (p.count || 1) * 4))}
-                        pathOptions={{ color: "#2563eb", fillColor: "#2563eb", fillOpacity: 0.25 }}
+                        pathOptions={{
+                          color: diseaseColor(p.disease),
+                          fillColor: diseaseColor(p.disease),
+                          fillOpacity: 0.25,
+                        }}
                       >
                         <LTooltip direction="top" opacity={1}>
                           <div>
