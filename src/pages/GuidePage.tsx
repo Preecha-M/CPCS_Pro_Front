@@ -1,4 +1,5 @@
 import Topbar from "../components/Topbar";
+import guideImg from "../guide_images/guide.png";
 
 export default function GuidePage() {
   return (
@@ -21,7 +22,7 @@ export default function GuidePage() {
 
       <main className="max-w-4xl mx-auto px-4 pb-16 space-y-10">
         <div className="rounded-2xl overflow-hidden shadow-soft ring-1 ring-gray-200 dark:ring-white/10">
-          <img src="/guide_images/guide1.png" alt="คู่มือการใช้งาน - ภาพที่ 1" className="w-full" />
+          <img src={guideImg} alt="คู่มือการใช้งาน - ภาพที่ 1" className="w-full" />
         </div>
       </main>
 
