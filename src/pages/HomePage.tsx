@@ -151,8 +151,24 @@ export default function HomePage() {
       </main>
 
       <footer className="border-t border-gray-100 dark:border-white/10">
-        <div className="max-w-6xl mx-auto px-4 py-10 text-sm text-gray-500 dark:text-gray-400">
-          © {new Date().getFullYear()} Rice Disease Project — Computer Science, KKU
+        <div className="max-w-6xl mx-auto px-4 py-10 text-sm text-gray-500 dark:text-gray-400 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div>© {new Date().getFullYear()} Rice Disease Project — Computer Science, KKU</div>
+
+          <a
+            href="https://www.digitalocean.com/?refcode=81b1410fbada&utm_campaign=Referral_Invite&utm_medium=Referral_Program&utm_source=badge"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="opacity-90 hover:opacity-100 transition"
+            aria-label="DigitalOcean Referral Badge"
+            title="DigitalOcean"
+          >
+            <img
+              src="https://web-platforms.sfo2.cdn.digitaloceanspaces.com/WWW/Badge%201.svg"
+              alt="DigitalOcean Referral Badge"
+              loading="lazy"
+              className="h-8 w-auto"
+            />
+          </a>
         </div>
       </footer>
     </div>

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import Topbar from "../components/Topbar";
+import SiteLayout from "../components/layouts/SiteLayout";
 import { fetchAdminDashboard, type AdminDashboardResponse } from "../lib/api";
 import { Pie, Line, Bar } from "react-chartjs-2";
 import {
@@ -189,8 +189,10 @@ export default function AdminPage() {
   }, [colors]);
 
   return (
+     <SiteLayout showDigitalOceanBadge>
+
     <div>
-      <Topbar />
+      
 
       <section className="relative">
         <div className="absolute inset-0 -z-10 bg-hero-gradient"></div>
@@ -423,11 +425,8 @@ export default function AdminPage() {
         )}
       </main>
 
-      <footer className="border-t border-gray-100 dark:border-white/10">
-        <div className="max-w-7xl mx-auto px-4 py-8 text-sm text-gray-500 dark:text-gray-400">
-          © {new Date().getFullYear()} Rice Disease Project — Computer Science, KKU
-        </div>
-      </footer>
+      
     </div>
+    </SiteLayout>
   );
 }

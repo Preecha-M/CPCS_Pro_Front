@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
+import SiteLayout from "../components/layouts/SiteLayout";
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -23,6 +24,8 @@ export default function LoginPage() {
   }
 
   return (
+    <SiteLayout showTopbar={false} footerVariant="minimal">
+
     <div className="max-w-md mx-auto px-4 py-10">
       <h1 className="text-2xl font-semibold mb-6">Login</h1>
 
@@ -48,5 +51,7 @@ export default function LoginPage() {
         <Link to="/">Back to Home</Link>
       </div>
     </div>
+    </SiteLayout>
+
   );
 }

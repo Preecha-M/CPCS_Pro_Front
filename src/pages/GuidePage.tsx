@@ -1,10 +1,11 @@
-import Topbar from "../components/Topbar";
+import SiteLayout from "../components/layouts/SiteLayout";
 import guideImg from "../guide_images/guide.png";
 
 export default function GuidePage() {
   return (
+    <SiteLayout>
     <div>
-      <Topbar />
+      
 
       <section className="relative">
         <div className="absolute inset-0 -z-10 bg-hero-gradient"></div>
@@ -26,11 +27,7 @@ export default function GuidePage() {
         </div>
       </main>
 
-      <footer className="border-t border-gray-100 dark:border-white/10">
-        <div className="max-w-6xl mx-auto px-4 py-10 text-sm text-gray-500 dark:text-gray-400 text-center">
-          © {new Date().getFullYear()} Rice Disease Project — Computer Science, KKU
-        </div>
-      </footer>
     </div>
+    </SiteLayout>
   );
 }
