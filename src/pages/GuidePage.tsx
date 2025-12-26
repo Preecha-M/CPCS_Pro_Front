@@ -12,7 +12,7 @@ export default function GuidePage() {
 
         <div className="max-w-6xl mx-auto px-4 py-16 md:py-20 text-center">
           <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-gray-900 dark:text-white">
-            📘 คู่มือการใช้งาน LINE Chatbot
+            วิธีการใช้งาน LINE Chatbot
           </h1>
           <p className="mt-4 text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
             ทำตามขั้นตอนง่าย ๆ ในรูปภาพด้านล่าง เพื่อใช้งานระบบวิเคราะห์โรคข้าวผ่าน LINE
