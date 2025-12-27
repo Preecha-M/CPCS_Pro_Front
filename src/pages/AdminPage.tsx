@@ -48,6 +48,28 @@ function useThemeColors() {
   }, [dark]);
 }
 
+const CONFIDENCE_THRESHOLD = 0.45;
+
+function shortPlaceName(addr: string, maxLen = 18) {
+  const raw = (addr || "").trim();
+  if (!raw) return "ไม่ระบุสถานที่";
+
+  // ตัดส่วนที่ยาวเกิน/ซ้ำซ้อน (เช่น รายละเอียดหน้าบ้าน/หมู่บ้าน) โดยเอาส่วนท้ายที่สำคัญ
+  // รูปแบบที่พบบ่อย: "ตำบล... อำเภอ... จังหวัด..." หรือมีคอมมา
+  const parts = raw.split(",").map((s) => s.trim()).filter(Boolean);
+  let base = parts.length >= 2 ? parts.slice(-2).join(", ") : raw;
+
+  base = base
+    .replace(/จังหวัด/gi, "จ.")
+    .replace(/อำเภอ/gi, "อ.")
+    .replace(/ตำบล/gi, "ต.")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  if (base.length > maxLen) return base.slice(0, maxLen - 1) + "…";
+  return base;
+}
+
 export default function AdminPage() {
   const colors = useThemeColors();
 
@@ -59,6 +81,11 @@ export default function AdminPage() {
   const [lat, setLat] = useState<string>("13.10");
   const [lon, setLon] = useState<string>("100.10");
   const [page, setPage] = useState<number>(1);
+
+  // Card 4: Sort controls
+  const [sortLocationsBy, setSortLocationsBy] = useState<string>("__total"); // __az | __total | <disease>
+  const [sortDiseasesBy, setSortDiseasesBy] = useState<string>("__az"); // __az | __total | <location>
+  const [selectedDisease, setSelectedDisease] = useState<string>("__all"); // __all | <disease>
 
   const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains("dark"));
   useEffect(() => {
@@ -144,16 +171,70 @@ export default function AdminPage() {
   }, [data, diseaseColor]);
 
   const barGroupedData = useMemo(() => {
+    const locations = data?.grouped_locations || [];
+    const datasetsRaw = data?.grouped_datasets || [];
+
+    // Map: disease -> array(count per location index)
+    const diseaseLabels = datasetsRaw.map((d) => d.label);
+    const locIdx = new Map<string, number>();
+    locations.forEach((l, i) => locIdx.set(l, i));
+
+    // ---- sort locations (x-axis) ----
+    const totalsByLoc = locations.map((_, i) =>
+      datasetsRaw.reduce((sum, ds) => sum + (Number(ds.data?.[i] ?? 0) || 0), 0)
+    );
+
+    let locOrder = locations.map((l, i) => ({ l, i }));
+
+    if (sortLocationsBy === "__az") {
+      locOrder.sort((a, b) => shortPlaceName(a.l).localeCompare(shortPlaceName(b.l), "th"));
+    } else if (sortLocationsBy === "__total") {
+      locOrder.sort((a, b) => (totalsByLoc[b.i] ?? 0) - (totalsByLoc[a.i] ?? 0));
+    } else {
+      // sort by selected disease count at each location
+      const ds = datasetsRaw.find((x) => x.label === sortLocationsBy);
+      if (ds) {
+        locOrder.sort((a, b) => (Number(ds.data?.[b.i] ?? 0) || 0) - (Number(ds.data?.[a.i] ?? 0) || 0));
+      }
+    }
+
+    // ---- sort diseases (datasets) ----
+    const totalsByDisease = datasetsRaw.map((ds) =>
+      (ds.data || []).reduce((sum, v) => sum + (Number(v ?? 0) || 0), 0)
+    );
+
+    let dsOrder = datasetsRaw.map((ds, idx) => ({ ds, idx }));
+
+    if (sortDiseasesBy === "__az") {
+      dsOrder.sort((a, b) => a.ds.label.localeCompare(b.ds.label, "th"));
+    } else if (sortDiseasesBy === "__total") {
+      dsOrder.sort((a, b) => (totalsByDisease[b.idx] ?? 0) - (totalsByDisease[a.idx] ?? 0));
+    } else {
+      // sort by selected location (raw string) count per disease
+      const locIndex = locIdx.get(sortDiseasesBy);
+      if (typeof locIndex === "number") {
+        dsOrder.sort(
+          (a, b) =>
+            (Number(b.ds.data?.[locIndex] ?? 0) || 0) - (Number(a.ds.data?.[locIndex] ?? 0) || 0)
+        );
+      }
+    }
+
+    const datasetsFinal =
+      selectedDisease === "__all"
+        ? dsOrder
+        : dsOrder.filter(({ ds }) => ds.label === selectedDisease);
+
     return {
-      labels: data?.grouped_locations || [],
-      datasets:
-        data?.grouped_datasets?.map((ds) => ({
-          label: ds.label,
-          data: ds.data,
-          backgroundColor: diseaseColor(ds.label),
-        })) || [],
+      labels: locOrder.map((x) => shortPlaceName(x.l)),
+      datasets: datasetsFinal.map(({ ds }) => ({
+        label: ds.label,
+        data: locOrder.map((x) => Number(ds.data?.[x.i] ?? 0) || 0),
+        backgroundColor: diseaseColor(ds.label),
+      })),
     };
-  }, [data, diseaseColor]);
+  }, [data, diseaseColor, sortLocationsBy, sortDiseasesBy, selectedDisease]);
+
 
   const histData = useMemo(() => {
     const confs = data?.confidence_values || [];
@@ -307,9 +388,28 @@ export default function AdminPage() {
                 <div className="h-[420px] rounded-xl overflow-hidden">
                   <MapContainer center={[16.4, 102.8]} zoom={9} className="h-full w-full">
                     <TileLayer attribution="&copy; OpenStreetMap" url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-                    {(data.heat_points || []).map((p, i) => (
-                      <CircleMarker key={i} center={[p[0], p[1]]} radius={10} pathOptions={{ color: "#2563eb" }} />
-                    ))}
+                    {(() => {
+                      const pts = data.heat_points || [];
+                      const maxW = Math.max(1, ...pts.map((p) => Number(p?.[2] ?? 1) || 1));
+                      return pts.map((p, i) => {
+                        const w = Number(p?.[2] ?? 1) || 1;
+                        const r = 6 + (w / maxW) * 18;
+                        const opacity = Math.min(0.85, 0.15 + (w / maxW) * 0.7);
+                        return (
+                          <CircleMarker
+                            key={i}
+                            center={[p[0], p[1]]}
+                            radius={r}
+                            pathOptions={{
+                              color: "#ef4444",
+                              fillColor: "#ef4444",
+                              fillOpacity: opacity,
+                              weight: 0,
+                            }}
+                          />
+                        );
+                      });
+                    })()}
                   </MapContainer>
                 </div>
               </div>
@@ -345,7 +445,59 @@ export default function AdminPage() {
 
             <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div className="rounded-2xl bg-white dark:bg-white/5 ring-1 ring-gray-100 dark:ring-white/10 shadow-soft p-5">
-                <h3 className="text-lg font-semibold mb-2">4) จำนวนโรคตามสถานที่ (Grouped Bar)</h3>
+                <div className="mb-2">
+                  <h3 className="text-lg font-semibold">4) จำนวนโรคตามสถานที่ (Grouped Bar)</h3>
+
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                    <select
+                      className="h-8 max-w-full rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 px-2 text-xs"
+                      value={selectedDisease}
+                      onChange={(e) => setSelectedDisease(e.target.value)}
+                      title="แสดงเฉพาะโรค"
+                    >
+                      <option value="__all">แสดงทุกโรค</option>
+                      {(data?.grouped_datasets || []).map((ds) => (
+                        <option key={ds.label} value={ds.label}>
+                          แสดงเฉพาะ: {ds.label}
+                        </option>
+                      ))}
+                    </select>
+
+                    <select
+                      className="h-8 max-w-full rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 px-2 text-xs"
+                      value={sortLocationsBy}
+                      onChange={(e) => setSortLocationsBy(e.target.value)}
+                      title="เรียงสถานที่ตาม"
+                    >
+                      <option value="__az">เรียงสถานที่: A–Z</option>
+                      <option value="__total">เรียงสถานที่: รวมมาก→น้อย</option>
+                      {(data?.grouped_datasets || []).map((ds) => (
+                        <option key={ds.label} value={ds.label}>
+                          เรียงสถานที่: โรค {ds.label} มาก→น้อย
+                        </option>
+                      ))}
+                    </select>
+
+                    <select
+                      className="h-8 max-w-full rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 px-2 text-xs"
+                      value={sortDiseasesBy}
+                      onChange={(e) => setSortDiseasesBy(e.target.value)}
+                      title="เรียงโรคตาม"
+                    >
+                      <option value="__az">เรียงโรค: A–Z</option>
+                      <option value="__total">เรียงโรค: รวมมาก→น้อย</option>
+                      {(data?.grouped_locations || []).map((loc) => (
+                        <option key={loc} value={loc}>
+                          เรียงโรค: สถานที่ {shortPlaceName(loc)}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                    แสดงผลเฉพาะรายการที่ confidence ≥ {CONFIDENCE_THRESHOLD}
+                  </div>
+                </div>
                 <div className="h-[360px]">
                   <Bar data={barGroupedData} options={chartOptions} />
                 </div>

@@ -19,7 +19,7 @@ export default function Topbar() {
   }
 
   return (
-    <header className="sticky top-0 z-30 border-b border-gray-100 dark:border-white/10 bg-white/70 dark:bg-gray-950/60 backdrop-blur">
+    <header className="sticky top-0 z-[2000] border-b border-gray-100 dark:border-white/10 bg-white/70 dark:bg-gray-950/60 backdrop-blur">
       <div className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2 font-semibold tracking-tight">
           <span className="inline-block w-2.5 h-2.5 rounded-full bg-brand"></span>
