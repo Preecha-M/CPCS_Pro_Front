@@ -1,11 +1,9 @@
-import Topbar from "../components/Topbar";
 import { Link } from "react-router-dom";
+import SiteLayout from "../components/layouts/SiteLayout";
 
 export default function HomePage() {
   return (
-    <div>
-      <Topbar />
-
+    <SiteLayout showTopbar={true} showDigitalOceanBadge>
       <section className="relative">
         <div className="absolute inset-0 -z-10 bg-hero-gradient"></div>
         <div className="absolute inset-0 -z-10 bg-[radial-gradient(600px_200px_at_50%_0%,rgba(37,99,235,0.12),transparent)]"></div>
@@ -149,28 +147,6 @@ export default function HomePage() {
           </div>
         </section>
       </main>
-
-      <footer className="border-t border-gray-100 dark:border-white/10">
-        <div className="max-w-6xl mx-auto px-4 py-10 text-sm text-gray-500 dark:text-gray-400 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div>© {new Date().getFullYear()} Rice Disease Project — Computer Science, KKU</div>
-
-          <a
-            href="https://www.digitalocean.com/?refcode=81b1410fbada&utm_campaign=Referral_Invite&utm_medium=Referral_Program&utm_source=badge"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="opacity-90 hover:opacity-100 transition"
-            aria-label="DigitalOcean Referral Badge"
-            title="DigitalOcean"
-          >
-            <img
-              src="https://web-platforms.sfo2.cdn.digitaloceanspaces.com/WWW/Badge%201.svg"
-              alt="DigitalOcean Referral Badge"
-              loading="lazy"
-              className="h-8 w-auto"
-            />
-          </a>
-        </div>
-      </footer>
-    </div>
+    </SiteLayout>
   );
 }

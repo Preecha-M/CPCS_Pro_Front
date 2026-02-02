@@ -1,5 +1,6 @@
 import React from "react";
 import Topbar from "../Topbar";
+import { Link } from "react-router-dom";
 
 type FooterVariant = "default" | "minimal" | "none";
 
@@ -25,8 +26,15 @@ export default function SiteLayout({
       {footerVariant !== "none" && (
         <footer className="border-t border-gray-100 dark:border-white/10">
           <div className="max-w-6xl mx-auto px-4 py-8 text-sm text-gray-500 dark:text-gray-400 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div>
-              © {new Date().getFullYear()} Rice Disease Project — Computer Science
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+              <div>
+                © {new Date().getFullYear()} Rice Disease Project — Computer
+                Science
+              </div>
+              <div className="hidden sm:block opacity-60">•</div>
+              <Link to="/privacy-policy" className="hover:underline">
+                Privacy Policy
+              </Link>
             </div>
 
             {footerVariant === "default" && showDigitalOceanBadge && (

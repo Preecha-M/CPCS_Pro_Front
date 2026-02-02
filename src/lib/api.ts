@@ -61,6 +61,19 @@ export type AdminDashboardResponse = {
   }>;
 };
 
+export type WeatherForecast = {
+  time: string;
+  data: Array<{ label: string; value: string }>;
+  ws10m?: number; // Wind speed at 10m (m/s)
+  wd10m?: number; // Wind direction at 10m (degrees)
+};
+
+export type HistoryDetailResponse = {
+  record: AdminRecord & { id: string };
+  weather_data: any;
+  weather_list: WeatherForecast[];
+};
+
 export async function fetchAdminDashboard(params: {
   date?: string;
   lat?: string;
@@ -86,4 +99,32 @@ export async function fetchAdminDashboard(params: {
 
   
   return res.json();
+}
+
+export async function fetchHistoryDetail(
+  recordId: string
+): Promise<HistoryDetailResponse> {
+  const res = await fetch(`/api/admin/history/${recordId}`, {
+    headers: { accept: "application/json" },
+    credentials: "include",
+  });
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`API error ${res.status}: ${text}`);
+  }
+
+  return res.json();
+}
+
+export async function deleteHistoryRecord(recordId: string): Promise<void> {
+  const res = await fetch(`/api/admin/history/${recordId}`, {
+    method: "DELETE",
+    credentials: "include",
+  });
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`API error ${res.status}: ${text}`);
+  }
 }
