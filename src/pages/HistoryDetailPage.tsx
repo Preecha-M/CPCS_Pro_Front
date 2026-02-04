@@ -193,7 +193,7 @@ export default function HistoryDetailPage() {
                   </div>
                   <div className="text-lg font-semibold">
                     {typeof record.confidence === "number"
-                      ? (record.confidence * 100).toFixed(1) + "%"
+                      ? record.confidence.toFixed(1) + "%"
                       : "-"}
                   </div>
                 </div>

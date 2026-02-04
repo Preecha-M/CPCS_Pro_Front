@@ -365,48 +365,7 @@ export default function AdminPage() {
                 </p>
               </div>
 
-              <div className="rounded-2xl bg-white/80 dark:bg-white/5 backdrop-blur ring-1 ring-gray-200/70 dark:ring-white/10 shadow-soft px-4 py-3 flex flex-wrap items-end gap-3">
-                <div>
-                  <label className="block text-xs text-gray-600 dark:text-gray-300 mb-1">
-                    วันที่ (Weather)
-                  </label>
-                  <input
-                    type="date"
-                    value={date}
-                    max={data?.max_date || undefined}
-                    onChange={(e) => setDate(e.target.value)}
-                    className="border border-gray-300 dark:border-white/10 bg-white dark:bg-white/5 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs text-gray-600 dark:text-gray-300 mb-1">
-                    Lat
-                  </label>
-                  <input
-                    type="text"
-                    value={lat}
-                    onChange={(e) => setLat(e.target.value)}
-                    className="border border-gray-300 dark:border-white/10 bg-white dark:bg-white/5 rounded-lg px-3 py-2 text-sm w-28 focus:outline-none focus:ring-2 focus:ring-brand/30"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs text-gray-600 dark:text-gray-300 mb-1">
-                    Lon
-                  </label>
-                  <input
-                    type="text"
-                    value={lon}
-                    onChange={(e) => setLon(e.target.value)}
-                    className="border border-gray-300 dark:border-white/10 bg-white dark:bg-white/5 rounded-lg px-3 py-2 text-sm w-28 focus:outline-none focus:ring-2 focus:ring-brand/30"
-                  />
-                </div>
-                <button
-                  onClick={() => load(1)}
-                  className="h-[38px] px-4 rounded-lg bg-gradient-to-r from-brand to-blue-500 text-white text-sm shadow-pill hover:brightness-110 transition"
-                >
-                  อัปเดต
-                </button>
-              </div>
+
             </div>
           </div>
         </section>
