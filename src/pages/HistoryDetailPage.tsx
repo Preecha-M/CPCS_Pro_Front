@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import SiteLayout from "../components/layouts/SiteLayout";
 import { fetchHistoryDetail, type HistoryDetailResponse } from "../lib/api";
-import { MapContainer, TileLayer, Marker, Popup, Polyline } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
@@ -19,56 +19,7 @@ const DefaultIcon = L.icon({
 
 L.Marker.prototype.options.icon = DefaultIcon;
 
-// Helper function to get wind speed color
-function getWindSpeedColor(speed: number): string {
-  if (speed < 5) return "#22c55e"; // Green - light wind
-  if (speed < 10) return "#eab308"; // Yellow - moderate wind
-  if (speed < 15) return "#f97316"; // Orange - strong wind
-  return "#ef4444"; // Red - very strong wind
-}
 
-// Helper function to create wind arrow coordinates
-function createWindArrow(
-  lat: number,
-  lon: number,
-  direction: number,
-  speed: number
-): { line: [number, number][]; arrowHead: [number, number][] } {
-  // Arrow length based on wind speed (visible size for field)
-  const length = 0.015 + (speed / 20) * 0.025;
-
-  // Convert wind direction to radians (wind direction is "from" direction)
-  // We want to show where wind is going, so add 180 degrees
-  const angleRad = ((direction + 180) % 360) * (Math.PI / 180);
-
-  // Calculate end point
-  const endLat = lat + length * Math.cos(angleRad);
-  const endLon = lon + length * Math.sin(angleRad);
-
-  // Create arrow line
-  const line: [number, number][] = [
-    [lat, lon],
-    [endLat, endLon],
-  ];
-
-  // Create arrowhead (two lines forming a V) - minimal size
-  const arrowAngle = Math.PI / 6; // 30 degrees
-  const arrowLength = length * 0.25;
-
-  const leftLat = endLat - arrowLength * Math.cos(angleRad - arrowAngle);
-  const leftLon = endLon - arrowLength * Math.sin(angleRad - arrowAngle);
-
-  const rightLat = endLat - arrowLength * Math.cos(angleRad + arrowAngle);
-  const rightLon = endLon - arrowLength * Math.sin(angleRad + arrowAngle);
-
-  const arrowHead: [number, number][] = [
-    [leftLat, leftLon],
-    [endLat, endLon],
-    [rightLat, rightLon],
-  ];
-
-  return { line, arrowHead };
-}
 
 export default function HistoryDetailPage() {
   const { recordId } = useParams<{ recordId: string }>();
@@ -130,22 +81,11 @@ export default function HistoryDetailPage() {
   }
 
   const { record, weather_list } = data;
-  const lat = record.latitude || 0;
-  const lon = record.longitude || 0;
+  const lat = record.latitude ?? null;
+  const lon = record.longitude ?? null;
+  const hasLocation = lat !== null && lon !== null;
 
-  // Find the closest weather forecast to the record timestamp
-  // If no weather data is available, use mock data for demonstration
-  let closestWeather = weather_list?.[0];
-  
-  // Fallback: Create mock wind data if not available
-  if (!closestWeather || typeof closestWeather.ws10m !== "number" || typeof closestWeather.wd10m !== "number") {
-    closestWeather = {
-      time: "Mock Data",
-      data: [],
-      ws10m: 5.5, // Mock wind speed (m/s)
-      wd10m: 135, // Mock wind direction (degrees) - Southeast
-    };
-  }
+  const closestWeather = weather_list?.[0];
 
   return (
     <SiteLayout>
@@ -230,7 +170,7 @@ export default function HistoryDetailPage() {
                   พิกัด (Latitude, Longitude)
                 </div>
                 <div className="font-mono text-sm">
-                  {lat.toFixed(6)}, {lon.toFixed(6)}
+                  {hasLocation ? `${lat!.toFixed(6)}, ${lon!.toFixed(6)}` : "ไม่มีตำแหน่ง"}
                 </div>
               </div>
             </div>
@@ -264,135 +204,41 @@ export default function HistoryDetailPage() {
             )}
           </div>
 
-          {/* Right Column - Map with Wind Vectors */}
+          {/* Right Column - Map */}
           <div className="space-y-6">
             <div className="rounded-2xl bg-white dark:bg-white/5 ring-1 ring-gray-100 dark:ring-white/10 shadow-soft p-5">
               <h3 className="text-lg font-semibold mb-3">
-                แผนที่และทิศทางลม
+                {hasLocation ? "แผนที่" : "ไม่พบแผนที่"}
               </h3>
-              <div className="h-[500px] rounded-xl overflow-hidden">
-                <MapContainer
-                  center={[lat, lon]}
-                  zoom={12}
-                  className="h-full w-full"
-                >
-                  <TileLayer
-                    attribution="&copy; OpenStreetMap"
-                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                  />
-                  
-                  {/* Location Marker */}
-                  <Marker position={[lat, lon]}>
-                    <Popup>
-                      <div className="text-sm">
-                        <div className="font-semibold">{record.disease || "Unknown"}</div>
-                        <div>{record.address || "ไม่ระบุสถานที่"}</div>
-                        <div className="text-xs text-gray-500">
-                          {lat.toFixed(6)}, {lon.toFixed(6)}
+              {hasLocation ? (
+                <div className="h-[500px] rounded-xl overflow-hidden">
+                  <MapContainer
+                    center={[lat!, lon!]}
+                    zoom={12}
+                    className="h-full w-full"
+                  >
+                    <TileLayer
+                      attribution="&copy; OpenStreetMap"
+                      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    />
+                    
+                    {/* Location Marker */}
+                    <Marker position={[lat!, lon!]}>
+                      <Popup>
+                        <div className="text-sm">
+                          <div className="font-semibold">{record.disease || "Unknown"}</div>
+                          <div>{record.address || "ไม่ระบุสถานที่"}</div>
+                          <div className="text-xs text-gray-500">
+                            {lat!.toFixed(6)}, {lon!.toFixed(6)}
+                          </div>
                         </div>
-                      </div>
-                    </Popup>
-                  </Marker>
-
-                  {/* Wind Vector Field - Grid of Arrows */}
-                  {closestWeather &&
-                    typeof closestWeather.ws10m === "number" &&
-                    typeof closestWeather.wd10m === "number" &&
-                    (() => {
-                      const windSpeed = closestWeather.ws10m;
-                      const windDirection = closestWeather.wd10m;
-                      const color = getWindSpeedColor(windSpeed);
-                      
-                      // Create a grid of wind vectors
-                      const gridSize = 2; // 5x5 grid (smaller for clarity)
-                      const spacing = 0.025; // Distance between arrows (larger spacing)
-                      const arrows = [];
-                      
-                      for (let i = -gridSize; i <= gridSize; i++) {
-                        for (let j = -gridSize; j <= gridSize; j++) {
-                          const gridLat = lat + i * spacing;
-                          const gridLon = lon + j * spacing;
-                          
-                          const { line, arrowHead } = createWindArrow(
-                            gridLat,
-                            gridLon,
-                            windDirection,
-                            windSpeed
-                          );
-                          
-                          arrows.push(
-                            <span key={`${i}-${j}`}>
-                              {/* Main arrow line */}
-                              <Polyline
-                                positions={line}
-                                color={color}
-                                weight={3}
-                                opacity={0.75}
-                              />
-                              {/* Arrowhead */}
-                              <Polyline
-                                positions={arrowHead}
-                                color={color}
-                                weight={3}
-                                opacity={0.75}
-                              />
-                            </span>
-                          );
-                        }
-                      }
-                      
-                      return <>{arrows}</>;
-                    })()}
-                </MapContainer>
-              </div>
-
-              {/* Wind Legend */}
-              {closestWeather && (
-                <div className="mt-4 space-y-2">
-                  <div className="text-sm font-medium">ข้อมูลลม:</div>
-                  <div className="grid grid-cols-2 gap-2 text-sm">
-                    <div>
-                      <span className="text-gray-500 dark:text-gray-400">
-                        ความเร็ว:
-                      </span>{" "}
-                      <span className="font-medium">
-                        {closestWeather.ws10m?.toFixed(1) || "-"} m/s
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-gray-500 dark:text-gray-400">
-                        ทิศทาง:
-                      </span>{" "}
-                      <span className="font-medium">
-                        {closestWeather.wd10m?.toFixed(0) || "-"}°
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Color Legend */}
-                  <div className="mt-3 pt-3 border-t border-gray-200 dark:border-white/10">
-                    <div className="text-sm font-medium mb-2">
-                      ความหมายของสี:
-                    </div>
-                    <div className="space-y-1 text-xs">
-                      <div className="flex items-center gap-2">
-                        <div className="w-4 h-4 rounded" style={{ backgroundColor: "#22c55e" }}></div>
-                        <span>0-5 m/s (ลมอ่อน)</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className="w-4 h-4 rounded" style={{ backgroundColor: "#eab308" }}></div>
-                        <span>5-10 m/s (ลมปานกลาง)</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className="w-4 h-4 rounded" style={{ backgroundColor: "#f97316" }}></div>
-                        <span>10-15 m/s (ลมแรง)</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className="w-4 h-4 rounded" style={{ backgroundColor: "#ef4444" }}></div>
-                        <span>&gt;15 m/s (ลมแรงมาก)</span>
-                      </div>
-                    </div>
-                  </div>
+                      </Popup>
+                    </Marker>
+                  </MapContainer>
+                </div>
+              ) : (
+                <div className="h-[200px] flex items-center justify-center rounded-xl bg-gray-50 dark:bg-white/5 border border-dashed border-gray-200 dark:border-white/10">
+                  <span className="text-gray-400">ไม่พบตำแหน่งพิกัด (ละติจูด/ลองจิจูด) สำหรับแผนที่นี้</span>
                 </div>
               )}
             </div>
