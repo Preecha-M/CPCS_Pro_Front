@@ -69,9 +69,19 @@ export default function LogsPage() {
   return (
     <SiteLayout>
       <div className="max-w-6xl mx-auto px-4 py-8">
-        <h1 className="text-2xl font-semibold mb-2">System logs</h1>
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-2">
+          <h1 className="text-2xl font-semibold">System logs</h1>
+          <button
+            type="button"
+            onClick={() => void load()}
+            disabled={loading}
+            className="px-3 py-1.5 rounded-lg text-sm border border-gray-200 dark:border-white/15 hover:bg-gray-50 dark:hover:bg-white/10 disabled:opacity-50"
+          >
+            {loading ? "กำลังรีเฟรช..." : "รีเฟรช logs"}
+          </button>
+        </div>
         <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
-          บันทึกข้อผิดพลาด การเข้าถึง พฤติกรรมที่น่าสงสัย และรูปที่โมเดลปฏิเสธว่าไม่ใช่ใบข้าว (พร้อมลิงก์รูปย้อนหลัง)
+          บันทึกข้อผิดพลาด การเข้าถึง พฤติกรรมที่น่าสงสัย และรูปที่โมเดลปฏิเสธว่าไม่ใช่ใบข้าว
         </p>
 
         <div className="flex flex-wrap gap-2 mb-6">
