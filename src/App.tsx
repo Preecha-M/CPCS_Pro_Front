@@ -8,52 +8,66 @@ import RegisterPage from "./pages/RegisterPage";
 import ProtectedRoute from "./auth/ProtectedRoute";
 import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
 import DevDashboard from "./pages/DevDashboard";
+import LogsPage from "./pages/LogsPage";
+import PageViewBeacon from "./components/PageViewBeacon";
 
 export default function App() {
   return (
-    <Routes>
-      <Route path="/" element={<HomePage />} />
-      <Route path="/guide" element={<GuidePage />} />
+    <>
+      <PageViewBeacon />
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/guide" element={<GuidePage />} />
 
-      <Route path="/login" element={<LoginPage />} />
-      <Route
-        path="/register"
-        element={
-          <ProtectedRoute allow={["admin"]}>
-            <RegisterPage />
-          </ProtectedRoute>
-        }
-      />
+        <Route path="/login" element={<LoginPage />} />
+        <Route
+          path="/register"
+          element={
+            <ProtectedRoute allow={["admin"]}>
+              <RegisterPage />
+            </ProtectedRoute>
+          }
+        />
 
-      <Route
-        path="/admin"
-        element={
-          <ProtectedRoute allow={["admin", "researcher"]}>
-            <AdminPage />
-          </ProtectedRoute>
-        }
-      />
-      
-      <Route
-        path="/admin/history/:recordId"
-        element={
-          <ProtectedRoute allow={["admin", "researcher"]}>
-            <HistoryDetailPage />
-          </ProtectedRoute>
-        }
-      />
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute allow={["admin", "researcher"]}>
+              <AdminPage />
+            </ProtectedRoute>
+          }
+        />
 
-      <Route
-        path="/dev/dashboard"
-        element={
-          <ProtectedRoute allow={["admin"]}>
-            <DevDashboard />
-          </ProtectedRoute>
-        }
-      />
-      
-      <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+        <Route
+          path="/admin/history/:recordId"
+          element={
+            <ProtectedRoute allow={["admin", "researcher"]}>
+              <HistoryDetailPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/dev/dashboard"
+          element={
+            <ProtectedRoute allow={["admin"]}>
+              <DevDashboard />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/logs"
+          element={
+            <ProtectedRoute allow={["admin"]}>
+              <LogsPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </>
   );
 }

@@ -32,7 +32,10 @@ export default function Topbar() {
               <>
                 <Link to="/admin" className={linkCls("/admin")}>Dashboard</Link>
                 {user.role === "admin" ? (
-                  <Link to="/register" className={linkCls("/register")}>Register</Link>
+                  <>
+                    <Link to="/logs" className={linkCls("/logs")}>Logs</Link>
+                    <Link to="/register" className={linkCls("/register")}>Register</Link>
+                  </>
                 ) : null}
               </>
             ) : null}

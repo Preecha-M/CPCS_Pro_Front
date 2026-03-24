@@ -128,3 +128,50 @@ export async function deleteHistoryRecord(recordId: string): Promise<void> {
     throw new Error(`API error ${res.status}: ${text}`);
   }
 }
+
+export type AuditLogKind =
+  | "all"
+  | "access"
+  | "security"
+  | "system_error"
+  | "page_view"
+  | "rejected_rice_image";
+
+export type AuditLogItem = {
+  id: string | null;
+  kind: string;
+  created_at: string;
+  payload: Record<string, unknown>;
+};
+
+export type AuditLogsResponse = {
+  items: AuditLogItem[];
+  page: number;
+  limit: number;
+  total: number;
+  total_pages: number;
+  kind: string;
+};
+
+export async function fetchAuditLogs(params: {
+  kind?: AuditLogKind;
+  page?: number;
+  limit?: number;
+}): Promise<AuditLogsResponse> {
+  const sp = new URLSearchParams();
+  if (params.kind && params.kind !== "all") sp.set("kind", params.kind);
+  if (params.page) sp.set("page", String(params.page));
+  if (params.limit) sp.set("limit", String(params.limit));
+
+  const res = await fetch(`/api/admin/logs?${sp.toString()}`, {
+    headers: { accept: "application/json" },
+    credentials: "include",
+  });
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`API error ${res.status}: ${text}`);
+  }
+
+  return res.json();
+}
